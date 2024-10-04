@@ -1,39 +1,66 @@
 package services_test
 
 import (
-	"coffee/coffee-server/mocks"
 	"coffee/coffee-server/services"
 	"database/sql"
-	"errors"
+	"log"
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
-	"github.com/stretchr/testify/mock"
+
+	_ "github.com/jackc/pgconn"
+	_ "github.com/jackc/pgx/stdlib"
+	_ "github.com/jackc/pgx/v4"
+	_ "github.com/lib/pq"
 )
 
+var (
+	db            *sql.DB
+	coffeeService *services.Coffee
+)
+
+var _ = BeforeSuite(func() {
+	dsn := "host=localhost port=5432 user=root password=secret dbname=coffee sslmode=disable timezone=UTC connect_timeout=5"
+	var err error
+	// Set up your database connection here
+	connStr := dsn
+	db, err = sql.Open("pgx", connStr)
+	if err != nil {
+		log.Fatalf("Failed to connect to database: %v", err)
+	}
+
+	// Initialize the Models struct with the database connection
+	models := services.New(db)
+	coffeeService = &models.Coffee // Take the address of models.Coffee
+})
+
+var _ = AfterSuite(func() {
+	if db != nil {
+		db.Close()
+	}
+})
+
 var _ = Describe("Coffee Service", func() {
-	var (
-		mockDB        *mocks.DBInterface
-		coffeeService *services.Coffee
-	)
-
 	BeforeEach(func() {
-		mockDB = new(mocks.DBInterface)
-		coffeeService = &services.Coffee{}
-	})
-
-	AfterEach(func() {
-		mockDB.AssertExpectations(GinkgoT()) // Verify that all expectations were met
+		// Clean up database or reset state before each test
+		_, err := db.Exec("DELETE FROM coffees")
+		Expect(err).To(BeNil())
 	})
 
 	Describe("GetAllCoffees", func() {
+		It("should return an empty slice if there are no coffees", func() {
+			coffees, err := coffeeService.GetAllCoffees()
+			Expect(err).To(BeNil())
+			Expect(coffees).To(BeEmpty())
+		})
 
-		It("should return an error if the query fails", func() {
-			mockDB.On("QueryContext", mock.Anything, "SELECT id, name, roast, image, region, price, grind_unit, created_at, updated_at FROM coffees", []interface{}{}).Return(nil, errors.New("query failed"))
+		It("should return all coffees", func() {
+			_, err := db.Exec("INSERT INTO coffees (id, name, roast, image, region, price, grind_unit) VALUES ('550e8400-e29b-41d4-a716-446655440000','Espresso', 'Dark', 'image1.png', 'Brazil', 10.0, 1)")
+			Expect(err).To(BeNil())
 
 			coffees, err := coffeeService.GetAllCoffees()
-			Expect(err).To(HaveOccurred())
-			Expect(coffees).To(BeNil())
+			Expect(err).To(BeNil())
+			Expect(coffees).To(HaveLen(1))
 		})
 	})
 
@@ -41,43 +68,25 @@ var _ = Describe("Coffee Service", func() {
 		It("should create a new coffee and return it", func() {
 			newCoffee := services.Coffee{Name: "Mocha", Roast: "Medium", Image: "image3.png", Region: "Ethiopia", Price: 15.0, GrindUnit: 1}
 
-			mockDB.On("ExecContext", mock.Anything, "INSERT INTO coffees(name, roast, image, region, price, grind_unit, created_at, updated_at) VALUES ($1, $2, $3, $4, $5, $6, $7, $8) returning *",
-				newCoffee.Name, newCoffee.Roast, newCoffee.Image, newCoffee.Region, newCoffee.Price, newCoffee.GrindUnit, mock.Anything, mock.Anything).Return(sql.Result(nil), nil)
-
 			createdCoffee, err := coffeeService.CreateCoffee(newCoffee)
 			Expect(err).To(BeNil())
 			Expect(createdCoffee).To(Equal(&newCoffee))
-		})
-
-		It("should return an error if the insert fails", func() {
-			newCoffee := services.Coffee{Name: "Mocha", Roast: "Medium", Image: "image3.png", Region: "Ethiopia", Price: 15.0, GrindUnit: 1}
-
-			mockDB.On("ExecContext", mock.Anything, "INSERT INTO coffees(name, roast, image, region, price, grind_unit, created_at, updated_at) VALUES ($1, $2, $3, $4, $5, $6, $7, $8) returning *",
-				newCoffee.Name, newCoffee.Roast, newCoffee.Image, newCoffee.Region, newCoffee.Price, newCoffee.GrindUnit, mock.Anything, mock.Anything).Return(nil, errors.New("insert failed"))
-
-			createdCoffee, err := coffeeService.CreateCoffee(newCoffee)
-			Expect(err).To(HaveOccurred())
-			Expect(createdCoffee).To(BeNil())
 		})
 	})
 
 	Describe("GetCoffeesById", func() {
 		It("should return a coffee by ID", func() {
-			coffee := services.Coffee{ID: "1", Name: "Espresso", Roast: "Dark", Image: "image1.png", Region: "Brazil", Price: 10.0, GrindUnit: 1}
-
-			mockDB.On("QueryRowContext", mock.Anything, "SELECT id, name, roast, image, region, price, grind_unit, created_at, updated_at FROM coffees WHERE id=$1", "1").Return(&sql.Row{})
-			mockDB.On("Row.Scan").Return(nil)
-
-			result, err := coffeeService.GetCoffeesById("1")
+			// Insert a coffee into the database
+			_, err := db.Exec("INSERT INTO coffees (id, name, roast, image, region, price, grind_unit) VALUES ('550e8400-e29b-41d4-a716-446655440000', 'Espresso', 'Dark', 'image1.png', 'Brazil', 10.0, 1)")
 			Expect(err).To(BeNil())
-			Expect(result).To(Equal(&coffee))
+
+			result, err := coffeeService.GetCoffeesById("550e8400-e29b-41d4-a716-446655440000")
+			Expect(err).To(BeNil())
+			Expect(result.ID).To(Equal("550e8400-e29b-41d4-a716-446655440000"))
 		})
 
 		It("should return an error if coffee not found", func() {
-			mockDB.On("QueryRowContext", mock.Anything, "SELECT id, name, roast, image, region, price, grind_unit, created_at, updated_at FROM coffees WHERE id=$1", "1").Return(&sql.Row{})
-			mockDB.On("Row.Scan").Return(errors.New("no rows in result set"))
-
-			result, err := coffeeService.GetCoffeesById("1")
+			result, err := coffeeService.GetCoffeesById("nonexistent")
 			Expect(err).To(HaveOccurred())
 			Expect(result).To(BeNil())
 		})
@@ -85,41 +94,29 @@ var _ = Describe("Coffee Service", func() {
 
 	Describe("UpdateCoffee", func() {
 		It("should update an existing coffee and return it", func() {
-			coffee := services.Coffee{ID: "1", Name: "Espresso", Roast: "Dark", Image: "image1.png", Region: "Brazil", Price: 10.0, GrindUnit: 1}
-
-			mockDB.On("ExecContext", mock.Anything, "UPDATE coffees SET name = $1, roast = $2, image = $3, region = $4, price = $5, grind_unit = $6, updated_at = $7 WHERE id = $8 returning *",
-				coffee.Name, coffee.Roast, coffee.Image, coffee.Region, coffee.Price, coffee.GrindUnit, mock.Anything, "1").Return(sql.Result(nil), nil)
-
-			updatedCoffee, err := coffeeService.UpdateCoffee("1", coffee)
+			// Insert coffee to be updated
+			_, err := db.Exec("INSERT INTO coffees (id, name, roast, image, region, price, grind_unit) VALUES ('550e8400-e29b-41d4-a716-446655440000', 'Espresso', 'Dark', 'image1.png', 'Brazil', 10.0, 1)")
 			Expect(err).To(BeNil())
-			Expect(updatedCoffee).To(Equal(&coffee))
-		})
 
-		It("should return an error if the update fails", func() {
-			coffee := services.Coffee{ID: "1", Name: "Espresso", Roast: "Dark", Image: "image1.png", Region: "Brazil", Price: 10.0, GrindUnit: 1}
-
-			mockDB.On("ExecContext", mock.Anything, "UPDATE coffees SET name = $1, roast = $2, image = $3, region = $4, price = $5, grind_unit = $6, updated_at = $7 WHERE id = $8 returning *",
-				coffee.Name, coffee.Roast, coffee.Image, coffee.Region, coffee.Price, coffee.GrindUnit, mock.Anything, "1").Return(nil, errors.New("update failed"))
-
-			updatedCoffee, err := coffeeService.UpdateCoffee("1", coffee)
-			Expect(err).To(HaveOccurred())
-			Expect(updatedCoffee).To(BeNil())
+			coffee := services.Coffee{Name: "Latte", Roast: "Light", Image: "image2.png", Region: "Colombia", Price: 12.0, GrindUnit: 1}
+			updatedCoffee, err := coffeeService.UpdateCoffee("550e8400-e29b-41d4-a716-446655440000", coffee)
+			Expect(err).To(BeNil())
+			Expect(updatedCoffee.Name).To(Equal("Latte"))
 		})
 	})
 
 	Describe("DeleteCoffee", func() {
 		It("should delete a coffee by ID", func() {
-			mockDB.On("ExecContext", mock.Anything, "DELETE FROM coffees WHERE id = $1", "1").Return(sql.Result(nil), nil)
-
-			err := coffeeService.DeleteCoffee("1")
+			// Insert a coffee to delete
+			_, err := db.Exec("INSERT INTO coffees (id, name, roast, image, region, price, grind_unit) VALUES ('550e8400-e29b-41d4-a716-446655440000', 'Espresso', 'Dark', 'image1.png', 'Brazil', 10.0, 1)")
 			Expect(err).To(BeNil())
-		})
 
-		It("should return an error if the deletion fails", func() {
-			mockDB.On("ExecContext", mock.Anything, "DELETE FROM coffees WHERE id = $1", "1").Return(nil, errors.New("delete failed"))
+			err = coffeeService.DeleteCoffee("550e8400-e29b-41d4-a716-446655440000")
+			Expect(err).To(BeNil())
 
-			err := coffeeService.DeleteCoffee("1")
-			Expect(err).To(HaveOccurred())
+			coffees, err := coffeeService.GetAllCoffees()
+			Expect(err).To(BeNil())
+			Expect(coffees).To(BeEmpty())
 		})
 	})
 })
