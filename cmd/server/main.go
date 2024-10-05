@@ -32,7 +32,7 @@ func (app *Application) Serve() error {
 
 	srv := &http.Server{
 		Addr:    fmt.Sprintf(":%s", port),
-		Handler: router.Routes(),
+		Handler: router.Routes(app.Models.Coffee),
 	}
 
 	return srv.ListenAndServe()

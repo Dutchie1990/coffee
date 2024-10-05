@@ -16,7 +16,7 @@ import (
 
 var (
 	db            *sql.DB
-	coffeeService *services.Coffee
+	coffeeService services.CoffeeService
 )
 
 var _ = BeforeSuite(func() {
@@ -31,7 +31,8 @@ var _ = BeforeSuite(func() {
 
 	// Initialize the Models struct with the database connection
 	models := services.New(db)
-	coffeeService = &models.Coffee // Take the address of models.Coffee
+	coffeeService = models.Coffee
+
 })
 
 var _ = AfterSuite(func() {

@@ -9,14 +9,13 @@ import (
 	"github.com/go-chi/chi"
 )
 
-var coffee services.Coffee
-
 // GET /coffees
 
-func GetAllCoffees(w http.ResponseWriter, r *http.Request) {
+func GetAllCoffees(w http.ResponseWriter, r *http.Request, coffee services.CoffeeService) {
 	all, err := coffee.GetAllCoffees()
 	if err != nil {
 		helpers.MessageLogs.ErrorLog.Println(err)
+		helpers.ErrorJson(w, err, http.StatusInternalServerError)
 		return
 	}
 
@@ -25,62 +24,71 @@ func GetAllCoffees(w http.ResponseWriter, r *http.Request) {
 
 // GET /coffees/{id}
 
-func GetCoffeesById(w http.ResponseWriter, r *http.Request) {
+func GetCoffeesById(w http.ResponseWriter, r *http.Request, coffeeService services.CoffeeService) {
 	id := chi.URLParam(r, "id")
-	coffee, err := coffee.GetCoffeesById(id)
+
+	// Get the coffee by ID - this returns a *Coffee (pointer)
+	coffeePointer, err := coffeeService.GetCoffeesById(id)
 	if err != nil {
 		helpers.MessageLogs.ErrorLog.Println(err)
+		helpers.ErrorJson(w, err, http.StatusInternalServerError)
 		return
 	}
 
-	helpers.WriteJson(w, http.StatusOK, helpers.Envelop{"coffees": coffee})
+	// Since coffeePointer is *Coffee, we can pass it directly to the response
+	helpers.WriteJson(w, http.StatusOK, helpers.Envelop{"coffee": coffeePointer})
 }
 
 // POST /coffees
 
-func CreateCoffee(w http.ResponseWriter, r *http.Request) {
+func CreateCoffee(w http.ResponseWriter, r *http.Request, coffee services.CoffeeService) {
 	var coffeeData services.Coffee
 	err := json.NewDecoder(r.Body).Decode(&coffeeData)
 	if err != nil {
 		helpers.MessageLogs.ErrorLog.Println(err)
+		helpers.ErrorJson(w, err, http.StatusInternalServerError)
 		return
 	}
-	coffeeCreated, err := coffeeData.CreateCoffee((coffeeData))
+	coffeeCreated, err := coffee.CreateCoffee(coffeeData)
 	if err != nil {
 		helpers.MessageLogs.ErrorLog.Println(err)
+		helpers.ErrorJson(w, err, http.StatusInternalServerError)
 		return
 	}
 	helpers.WriteJson(w, http.StatusOK, helpers.Envelop{"coffees": coffeeCreated})
 }
 
-func UpdateCoffeeById(w http.ResponseWriter, r *http.Request) {
+func UpdateCoffeeById(w http.ResponseWriter, r *http.Request, coffee services.CoffeeService) {
 	var coffeeData services.Coffee
 	err := json.NewDecoder(r.Body).Decode(&coffeeData)
 
 	if err != nil {
 		helpers.MessageLogs.ErrorLog.Println(err)
+		helpers.ErrorJson(w, err, http.StatusInternalServerError)
 		return
 	}
 
 	id := chi.URLParam(r, "id")
 
-	coffeeUpdated, err := coffeeData.UpdateCoffee(id, coffeeData)
+	coffeeUpdated, err := coffee.UpdateCoffee(id, coffeeData)
 
 	if err != nil {
 		helpers.MessageLogs.ErrorLog.Println(err)
+		helpers.ErrorJson(w, err, http.StatusInternalServerError)
 		return
 	}
 
 	helpers.WriteJson(w, http.StatusOK, helpers.Envelop{"coffees": coffeeUpdated})
 }
 
-func DeleteCoffee(w http.ResponseWriter, r *http.Request) {
+func DeleteCoffee(w http.ResponseWriter, r *http.Request, coffee services.CoffeeService) {
 	id := chi.URLParam(r, "id")
 
 	err := coffee.DeleteCoffee(id)
 
 	if err != nil {
 		helpers.MessageLogs.ErrorLog.Println(err)
+		helpers.ErrorJson(w, err, http.StatusInternalServerError)
 		return
 	}
 }

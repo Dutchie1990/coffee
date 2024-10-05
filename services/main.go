@@ -5,16 +5,16 @@ import (
 	"time"
 )
 
-var db *sql.DB
-
 const dbTimeout = time.Second * 3
 
 type Models struct {
-	Coffee       Coffee
+	Coffee       CoffeeService
 	JsonResponse JsonResponse
 }
 
 func New(dbPool *sql.DB) Models {
-	db = dbPool
-	return Models{}
+	return Models{
+		Coffee:       &CoffeeServiceImpl{DB: dbPool}, // Initialize the concrete CoffeeService
+		JsonResponse: JsonResponse{},
+	}
 }

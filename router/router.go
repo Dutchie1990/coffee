@@ -1,7 +1,7 @@
 package router
 
 import (
-	"coffee/coffee-server/controllers"
+	"coffee/coffee-server/services"
 	"net/http"
 
 	"github.com/go-chi/chi"
@@ -9,7 +9,7 @@ import (
 	"github.com/go-chi/cors"
 )
 
-func Routes() http.Handler {
+func Routes(coffeeService services.CoffeeService) http.Handler {
 	router := chi.NewRouter()
 	router.Use(middleware.Recoverer)
 	router.Use(cors.Handler(cors.Options{
@@ -21,11 +21,11 @@ func Routes() http.Handler {
 		MaxAge:           300,
 	}))
 
-	router.Get("/api/v1/coffees", controllers.GetAllCoffees)
-	router.Get("/api/v1/coffees/coffee/{id}", controllers.GetCoffeesById)
-	router.Post("/api/v1/coffees/coffee", controllers.CreateCoffee)
-	router.Put("/api/v1/coffees/coffee/{id}", controllers.UpdateCoffeeById)
-	router.Delete("/api/v1/coffees/coffee/{id}", controllers.DeleteCoffee)
+	router.Get("/api/v1/coffees", CoffeeHandler(coffeeService))
+	router.Get("/api/v1/coffees/coffee/{id}", CoffeeByIdHandler(coffeeService))
+	router.Post("/api/v1/coffees/coffee", CreateCoffeeHandler(coffeeService))
+	router.Put("/api/v1/coffees/coffee/{id}", UpdateCoffeeHandler(coffeeService))
+	router.Delete("/api/v1/coffees/coffee/{id}", DeleteCoffeeHandler(coffeeService))
 
 	return router
 }
