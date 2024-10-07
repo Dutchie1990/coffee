@@ -43,6 +43,12 @@ jobs:
         apt-get update -y
         apt-get install -y docker-ce
 
+    - name: Setup open ssl
+      run: | 
+        sudo apt-get install -y pkg-config libssl-dev
+        export PKG_CONFIG_ALLOW_SYSTEM_CFLAGS=1
+        export PKG_CONFIG_PATH=/usr/lib/x86_64-linux-gnu/pkgconfig
+
     - uses: actions/setup-go@v5
       with:
         go-version: 'stable'
@@ -52,7 +58,6 @@ jobs:
 
     - name: Install Dependencies
       run: |
-        apt install -y pkg-config
         cargo install sqlx-cli --no-default-features --features native-tls,postgres
         go mod tidy          # Ensure dependencies are tidy
         go install github.com/onsi/ginkgo/v2/ginkgo
