@@ -43,6 +43,17 @@ jobs:
         apt-get update -y
         apt-get install -y docker-ce
 
+    - uses: actions/setup-go@v5
+      with:
+        go-version: 'stable'
+
+    - name: Install Dependencies
+      run: |
+          go mod tidy          # Ensure dependencies are tidy
+          go get github.com/jmoiron/sqlx  # Install sqlx
+          go install github.com/onsi/ginkgo/v2/ginkgo
+          go get github.com/onsi/gomega/...
+
     - name: Run Makefile
       run: |
         docker --version
@@ -52,12 +63,6 @@ jobs:
         make create_db
         make migrate_up
 
-    - uses: actions/setup-go@v5
-      with:
-        go-version: 'stable'
+
     - name: Run tests
-      run: |
-          go install github.com/onsi/ginkgo/v2/ginkgo
-          go get github.com/onsi/gomega/...
-          go mod tidy
-          ginkgo -r -cover
+      run: ginkgo -r -cover
