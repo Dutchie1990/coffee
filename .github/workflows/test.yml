@@ -9,8 +9,6 @@ jobs:
   test:
     timeout-minutes: 60
     runs-on: ubuntu-latest
-    container:
-      image: postgres
     steps:
     - uses: actions/checkout@v4
     - name: Setup environment variabels
