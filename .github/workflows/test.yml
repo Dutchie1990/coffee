@@ -1,4 +1,4 @@
-name: Playwright Tests
+name: Go Tests
 on:
   push:
     branches: [ main, master ]
@@ -13,10 +13,13 @@ jobs:
       image: postgres
     steps:
     - uses: actions/checkout@v4
-    - name: Setup env
+    - name: Setup environment variabels
       run: echo $QA_ENV_FILE | base64 --decode > .env
-    - name: Echo env
-      run: | 
-        sudo apt-get update
-        sudo apt-get install build-essential
-        make create_container
+
+    - name: Install build essentials
+      run: |
+        apt-get update && \
+        apt-get install -y build-essential
+
+    - name: Run Makefile
+      run: make create_container
