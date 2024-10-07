@@ -49,14 +49,13 @@ jobs:
 
     - name: Install Dependencies
       run: |
-          go mod tidy          # Ensure dependencies are tidy
-          go get github.com/jmoiron/sqlx  # Install sqlx
-          go install github.com/onsi/ginkgo/v2/ginkgo
-          go get github.com/onsi/gomega/...
+        cargo install sqlx-cli --no-default-features --features native-tls,postgres
+        go mod tidy          # Ensure dependencies are tidy
+        go install github.com/onsi/ginkgo/v2/ginkgo
+        go get github.com/onsi/gomega/...
 
     - name: Run Makefile
       run: |
-        docker --version
         make create_container
         make start_container
         sleep 10
