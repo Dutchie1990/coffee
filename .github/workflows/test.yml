@@ -15,5 +15,5 @@ jobs:
       run: echo $QA_ENV_FILE | base64 --decode > .env
     - name: Echo env
       run: | 
-        echo ls
-        echo cat .env
+        echo $ls
+        echo $cat .env
