@@ -9,11 +9,12 @@ jobs:
   test:
     timeout-minutes: 60
     runs-on: ubuntu-latest
+    container:
+      image: postgres
     steps:
     - uses: actions/checkout@v4
     - name: Setup env
       run: echo $QA_ENV_FILE | base64 --decode > .env
     - name: Echo env
       run: | 
-        echo $ls
-        echo $cat .env
+        make create_container
