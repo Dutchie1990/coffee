@@ -9,8 +9,8 @@ jobs:
   test:
     timeout-minutes: 60
     runs-on: ubuntu-latest
-    # container:
-    #   image: postgres
+    container:
+      image: postgres
     steps:
     - uses: actions/checkout@v4
     - name: Setup environment variabels
@@ -20,10 +20,10 @@ jobs:
         echo "$TESTING_ENV_FILE" > .env
         cat .env
 
-    # - name: Install build essentials
-    #   run: |
-    #     apt-get update && \
-    #     apt-get install -y build-essential
+    - name: Install build essentials
+      run: |
+        apt-get update && \
+        apt-get install -y build-essential
 
-    # - name: Run Makefile
-    #   run: make create_container
+    - name: Run Makefile
+      run: make create_container
