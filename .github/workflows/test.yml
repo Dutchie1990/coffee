@@ -14,4 +14,4 @@ jobs:
     - name: Setup env
       run: echo $QA_ENV_FILE | base64 --decode > .env
     - name: Echo env
-      run: cat .env
+      run: echo cat .env
