@@ -74,6 +74,7 @@ jobs:
           echo "Waiting for PostgreSQL..."
           sleep 2
         done
+        cat /var/lib/postgresql/data/postgresql.conf | grep listen_addresses
         make migrate_up
 
 
