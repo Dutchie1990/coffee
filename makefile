@@ -22,7 +22,7 @@ create_migrations:
 	sqlx migrate add -r init 
 
 migrate_up:
-	sqlx migrate run --database-url "postgres://${USER}:${PASSWORD}@${HOST}:${DB_PORT}/${DB_NAME}?sslmode=disable"
+	docker exec coffee-container sqlx migrate run --database-url "postgres://root:secret@localhost:5432/coffee?sslmode=disable"
 
 migrate_down:
 	sqlx migrate revert --database-url "postgres://${USER}:${PASSWORD}@${HOST}:${DB_PORT}/${DB_NAME}?sslmode=disable"
