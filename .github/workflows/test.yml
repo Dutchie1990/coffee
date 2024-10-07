@@ -14,7 +14,9 @@ jobs:
     steps:
     - uses: actions/checkout@v4
     - name: Setup environment variabels
-      run: echo $QA_ENV_FILE | base64 --decode > .env
+      env:
+        TESTING_ENV_FILE: ${{ secrets.QA_ENV_FILE }}
+      run: echo $TESTING_ENV_FILE | base64 --decode > .env
 
     - name: Install build essentials
       run: |
