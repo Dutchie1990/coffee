@@ -17,4 +17,6 @@ jobs:
       run: echo $QA_ENV_FILE | base64 --decode > .env
     - name: Echo env
       run: | 
+        sudo apt-get update
+        sudo apt-get install build-essential
         make create_container
