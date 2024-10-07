@@ -69,6 +69,7 @@ jobs:
         make start_container
         sleep 10
         make create_db
+        sleep 10
         make migrate_up
 
 
