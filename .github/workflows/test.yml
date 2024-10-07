@@ -46,6 +46,9 @@ jobs:
     - uses: actions/setup-go@v5
       with:
         go-version: 'stable'
+    - uses: actions-rs/toolchain@v1
+      with:
+        toolchain: stable
 
     - name: Install Dependencies
       run: |
