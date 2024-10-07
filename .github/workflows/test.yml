@@ -47,3 +47,15 @@ jobs:
       run: |
         docker --version
         make create_container
+        make create_db
+        make migrate_up
+
+    - uses: actions/setup-go@v5
+      with:
+        go-version: 'stable'
+    - name: Run tests
+      run: |
+          go install github.com/onsi/ginkgo/v2/ginkgo
+          go get github.com/onsi/gomega/...
+          go mod tidy
+          ginkgo -r -cover
