@@ -22,7 +22,7 @@ create_migrations:
 	sqlx migrate add -r init 
 
 migrate_up:
-	sqlx migrate run --database-url "postgres://${USER}:${PASSWORD}@${DB_DOCKER_CONTAINER}:${DB_PORT}/${DB_NAME}?sslmode=disable"
+	sqlx migrate run --database-url "postgres://${USER}:${PASSWORD}@${HOST}:${DB_PORT}/${DB_NAME}?sslmode=disable"
 
 migrate_down:
 	sqlx migrate revert --database-url "postgres://${USER}:${PASSWORD}@${HOST}:${DB_PORT}/${DB_NAME}?sslmode=disable"

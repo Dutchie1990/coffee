@@ -70,6 +70,10 @@ jobs:
         sleep 10
         make create_db
         sleep 10
+        until docker exec coffee-container pg_isready --username=root --dbname=coffee --host=localhost; do
+          echo "Waiting for PostgreSQL..."
+          sleep 2
+        done
         make migrate_up
 
 
