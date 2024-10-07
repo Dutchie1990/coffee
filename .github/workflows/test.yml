@@ -26,4 +26,6 @@ jobs:
         apt-get install -y build-essential
 
     - name: Run Makefile
-      run: make create_container
+      run: |
+        docker --version
+        make create_container
