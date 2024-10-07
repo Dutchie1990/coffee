@@ -48,6 +48,7 @@ jobs:
         docker --version
         make create_container
         make start_container
+        sleep 10
         make create_db
         make migrate_up
 
