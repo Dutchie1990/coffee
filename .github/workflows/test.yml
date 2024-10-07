@@ -47,6 +47,7 @@ jobs:
       run: |
         docker --version
         make create_container
+        make start_container
         make create_db
         make migrate_up
 
