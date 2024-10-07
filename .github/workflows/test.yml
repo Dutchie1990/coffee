@@ -16,7 +16,7 @@ jobs:
     - name: Setup environment variabels
       env:
         TESTING_ENV_FILE: ${{ secrets.QA_ENV_FILE }}
-      run: echo $TESTING_ENV_FILE | base64 --decode > .env
+      run: echo $TESTING_ENV_FILE > .env
 
     - name: Install build essentials
       run: |
