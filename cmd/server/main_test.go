@@ -1,12 +1,14 @@
 package main_test
 
 import (
+	"bytes"
 	"coffee/coffee-server/db"
 	"coffee/coffee-server/services"
 	"database/sql"
 	"encoding/json"
 	"net/http"
 	"os"
+	"time"
 
 	"github.com/lpernett/godotenv"
 	. "github.com/onsi/ginkgo/v2"
@@ -110,5 +112,50 @@ var _ = Describe("Main", Label("E2E"), func() {
 		Expect(coffee.Region).To(Equal("Brazil"))
 		Expect(float64(coffee.Price)).To(Equal(10.0))
 		Expect(int(coffee.GrindUnit)).To(Equal(1))
+	})
+	It("should return coffee by id with status 200", func() {
+		coffee := services.Coffee{
+			Name:      "Test-coffee",
+			Roast:     "Test-roast",
+			Region:    "Test-region",
+			Image:     "Test-image",
+			Price:     12.50,
+			GrindUnit: 1,
+		}
+
+		coffeeJson, err := json.Marshal(coffee)
+		Expect(err).NotTo(HaveOccurred())
+
+		// Make a GET request to the API to fetch the coffees
+		res, err := http.Post("http://localhost:8080/api/v1/coffees/coffee", "application/json", bytes.NewBuffer(coffeeJson))
+		Expect(err).NotTo(HaveOccurred())
+		defer res.Body.Close()
+
+		// Ensure that the response status code is 200 OK
+		Expect(res.StatusCode).To(Equal(http.StatusOK))
+
+		rows, err := sqlDB.Query(`SELECT * FROM coffees`)
+		Expect(err).NotTo(HaveOccurred())
+		defer rows.Close()
+
+		// Iterate over the results and validate
+		for rows.Next() {
+			var ID, name, roast, region, image string
+			var price float64
+			var grindUnit int
+			var created_at, updated_at time.Time
+
+			// Scan the result into the respective variables
+			err := rows.Scan(&ID, &name, &roast, &region, &image, &price, &grindUnit, &created_at, &updated_at)
+			Expect(err).NotTo(HaveOccurred())
+
+			// Validate the content of the returned coffee
+			Expect(name).To(Equal("Test-coffee"))
+			Expect(roast).To(Equal("Test-roast"))
+			Expect(region).To(Equal("Test-region"))
+			Expect(image).To(Equal("Test-image"))
+			Expect(float64(price)).To(Equal(12.5))
+			Expect(int(grindUnit)).To(Equal(1))
+		}
 	})
 })
