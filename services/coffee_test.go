@@ -65,7 +65,7 @@ var _ = Describe("Coffee Service", func() {
 		})
 	})
 
-	Describe("CreateCoffee", func() {
+	Describe("CreateCoffee", Label("integration"), func() {
 		It("should create a new coffee and return it", func() {
 			newCoffee := services.Coffee{Name: "Mocha", Roast: "Medium", Image: "image3.png", Region: "Ethiopia", Price: 15.0, GrindUnit: 1}
 

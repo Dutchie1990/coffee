@@ -23,7 +23,7 @@ var (
 	request      *http.Request
 )
 
-var _ = Describe("Coffee controller", func() {
+var _ = Describe("Coffee controller", Label("unit"), func() {
 	BeforeEach(func() {
 		recorder = httptest.NewRecorder()
 

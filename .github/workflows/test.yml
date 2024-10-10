@@ -1,47 +1,92 @@
 name: Go Tests
 on:
   push:
-    branches: [ main, master ]
+    branches: [main, master]
   pull_request:
-    branches: [ main, master ]
+    branches: [main, master]
   workflow_dispatch:
 jobs:
-  test:
+  test-E2E:
     timeout-minutes: 60
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v4
-    - name: Setup environment variabels
-      env:
-        TESTING_ENV_FILE: ${{ secrets.QA_ENV_FILE }}
-      run: |
-        echo "$TESTING_ENV_FILE" > .env
-        cat .env
+      - uses: actions/checkout@v4
+      - name: Setup environment variabels
+        env:
+          TESTING_ENV_FILE: ${{ secrets.QA_ENV_FILE }}
+        run: |
+          echo "$TESTING_ENV_FILE" > .env
+          cat .env
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "stable"
+      - name: Install Dependencies
+        run: |
+          cargo install sqlx-cli --no-default-features --features native-tls,postgres
+          go mod tidy          # Ensure dependencies are tidy
+          go install github.com/onsi/ginkgo/v2/ginkgo
+          go get github.com/onsi/gomega/...
+      - name: Run Makefile
+        run: |
+          make create_container
+          make start_container
+          sleep 10
+          make create_db
+          sleep 10
+          until docker exec coffee-container pg_isready --username=root --dbname=coffee --host=localhost; do
+            echo "Waiting for PostgreSQL..."
+            sleep 2
+          done
+          make migrate_up
+      - name: Run tests
+        run: ginkgo -r -cover --label-filter="E2E"
+  test-integration:
+    timeout-minutes: 60
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup environment variabels
+        env:
+          TESTING_ENV_FILE: ${{ secrets.QA_ENV_FILE }}
+        run: |
+          echo "$TESTING_ENV_FILE" > .env
+          cat .env
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "stable"
+      - name: Install Dependencies
+        run: |
+          cargo install sqlx-cli --no-default-features --features native-tls,postgres
+          go mod tidy          # Ensure dependencies are tidy
+          go install github.com/onsi/ginkgo/v2/ginkgo
+          go get github.com/onsi/gomega/...
+      - name: Run Makefile
+        run: |
+          make create_container
+          make start_container
+          sleep 10
+          make create_db
+          sleep 10
+          until docker exec coffee-container pg_isready --username=root --dbname=coffee --host=localhost; do
+            echo "Waiting for PostgreSQL..."
+            sleep 2
+          done
+          make migrate_up
+      - name: Run tests
+        run: ginkgo -r -cover --label-filter="integration"
 
-    - uses: actions/setup-go@v5
-      with:
-        go-version: 'stable'
-
-    - name: Install Dependencies
-      run: |
-        cargo install sqlx-cli --no-default-features --features native-tls,postgres
-        go mod tidy          # Ensure dependencies are tidy
-        go install github.com/onsi/ginkgo/v2/ginkgo
-        go get github.com/onsi/gomega/...
-
-    - name: Run Makefile
-      run: |
-        make create_container
-        make start_container
-        sleep 10
-        make create_db
-        sleep 10
-        until docker exec coffee-container pg_isready --username=root --dbname=coffee --host=localhost; do
-          echo "Waiting for PostgreSQL..."
-          sleep 2
-        done
-        make migrate_up
-
-
-    - name: Run tests
-      run: ginkgo -r -cover
+  test-unit:
+    timeout-minutes: 60
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "stable"
+      - name: Install Dependencies
+        run: |
+          go mod tidy          # Ensure dependencies are tidy
+          go install github.com/onsi/ginkgo/v2/ginkgo
+          go get github.com/onsi/gomega/...
+      - name: Run tests
+        run: ginkgo -r -cover --label-filter="unit"

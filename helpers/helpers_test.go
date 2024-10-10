@@ -13,7 +13,7 @@ import (
 	. "github.com/onsi/gomega"
 )
 
-var _ = Describe("Helpers", func() {
+var _ = Describe("Helpers", Label("unit"), func() {
 	var (
 		w       *httptest.ResponseRecorder
 		request *http.Request
