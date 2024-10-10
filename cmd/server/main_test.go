@@ -81,7 +81,7 @@ var _ = Describe("Main", Label("E2E"), func() {
 		Expect(float64(coffee.Price)).To(Equal(10.0))
 		Expect(int(coffee.GrindUnit)).To(Equal(1))
 	})
-	It("should return coffee by id with status 200", Label("integration"), func() {
+	It("should return coffee by id with status 200", func() {
 		// Insert a coffee into the database
 		_, err := sqlDB.Exec("INSERT INTO coffees (id, name, roast, image, region, price, grind_unit) VALUES ('550e8400-e29b-41d4-a716-446655440000','Espresso', 'Dark', 'image1.png', 'Brazil', 10.0, 1)")
 		Expect(err).To(BeNil())

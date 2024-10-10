@@ -39,7 +39,9 @@ jobs:
           done
           make migrate_up
       - name: Run tests
-        run: ginkgo -r -cover --label-filter="E2E"
+        run: |
+          go run cmd/server/main.go
+          ginkgo -r -cover --label-filter="E2E"
   test-integration:
     timeout-minutes: 60
     runs-on: ubuntu-latest

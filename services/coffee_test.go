@@ -41,7 +41,7 @@ var _ = AfterSuite(func() {
 	}
 })
 
-var _ = Describe("Coffee Service", func() {
+var _ = Describe("Coffee Service", Label("integration"), func() {
 	BeforeEach(func() {
 		// Clean up database or reset state before each test
 		_, err := db.Exec("DELETE FROM coffees")
@@ -65,7 +65,7 @@ var _ = Describe("Coffee Service", func() {
 		})
 	})
 
-	Describe("CreateCoffee", Label("integration"), func() {
+	Describe("CreateCoffee", func() {
 		It("should create a new coffee and return it", func() {
 			newCoffee := services.Coffee{Name: "Mocha", Roast: "Medium", Image: "image3.png", Region: "Ethiopia", Price: 15.0, GrindUnit: 1}
 
