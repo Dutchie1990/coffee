@@ -41,7 +41,7 @@ jobs:
       - name: Boot service
         run: go run cmd/server/main.go
       - name: Run tests
-        run: ginkgo -r -cover --label-filter="E2E"
+        run: ginkgo -r --label-filter="E2E"
   test-integration:
     timeout-minutes: 60
     runs-on: ubuntu-latest
